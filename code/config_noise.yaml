@@ -1,0 +1,23 @@
+general:
+  root_path: ./  # Current directory
+  csv_name: null 
+  device: cuda 
+
+data:
+  dataset: CIFAR 
+  num_outputs: 7
+  start: 0
+  end: 20  # Verify the 20 images
+
+model:
+  name: Custom  # Custom model
+  path: train_model.py  
+
+specification:
+  type: bound
+  epsilon: 0.005  # Allowed perturbation 
+  
+solver:
+  batch_size: 20
+  beta-crown:
+    iteration: 20
