@@ -1,23 +1,35 @@
 general:
-  root_path: ./  # Current directory
-  csv_name: null 
-  device: cuda 
-
-data:
-  dataset: CIFAR 
-  num_outputs: 7
-  start: 0
-  end: 20  # Verify the 20 images
+  device: cpu
+  results_file: code/verification_noise_results.txt
+  conv_mode: matrix
+  sparse_interm: false
 
 model:
-  name: Custom  # Custom model
-  path: train_model.py  
+  name: Customized("model_data_defs", "load_model", weights_path="code/skin_model.pth")
+  path: code/skin_model.pth
+
+data:
+  dataset: Customized("model_data_defs", "load_skin_data")
+  # pkl_path: code/verification_data_eps.pkl
+  start: 0
+  end: 20
+  num_outputs: 7
+  mean: [0.0, 0.0, 0.0]
+  std: [1.0, 1.0, 1.0 ]
 
 specification:
-  type: bound
-  epsilon: 0.005  # Allowed perturbation 
-  
+  robustness_type: verified-acc
+  epsilon: 0.002
+
 solver:
-  batch_size: 20
-  beta-crown:
+  batch_size: 1
+  beta-crown: 
     iteration: 20
+    enable_opt_interm_bounds: false
+
+bab:
+  timeout: 180
+  max_domains: 500000
+
+attack:
+  pgd_order: skip
