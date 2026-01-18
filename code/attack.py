@@ -5,6 +5,48 @@ import matplotlib.pyplot as plt
 import os
 from model_data_defs import load_model
 
+"""
+=============================================================================
+THEORY: FGSM (Fast Gradient Sign Method)
+=============================================================================
+Reference: Goodfellow et al., "Explaining and Harnessing Adversarial Examples" (2014)
+
+OBJECTIVE:
+   To generate an "Adversarial Example" (x_adv) that is perceptually identical 
+   to the original image (x) but maximizes the neural network's classification error.
+   This is a "White-Box" attack, meaning it requires full access to the model's 
+   gradients and architecture.
+
+MATHEMATICAL FORMULATION:
+   In standard training (Gradient Descent), we minimize the loss function J 
+   by updating the model weights (θ). In an adversarial attack, we freeze the 
+   weights and MAXIMIZE the loss J by modifying the input image (x).
+
+   The perturbation formula is:
+
+       x_adv = x + epsilon * sign( ∇x J(θ, x, y) )
+
+   Where:
+     - x       : Original clean image.
+     - x_adv   : Generated adversarial image.
+     - epsilon : Perturbation magnitude (e.g., 0.02). It limits the L-infinity 
+                 norm to ensure the noise remains invisible to humans.
+     - J(...)  : Loss function (e.g., CrossEntropyLoss).
+     - θ (theta): Model parameters/weights (frozen during attack).
+     - y       : True label (Ground Truth).
+     - ∇x      : Gradient of the loss with respect to the input x.
+     - sign()  : Sign function (+1 or -1), extracting the direction of the gradient.
+
+IMPLEMENTATION STEPS:
+   A. Forward Pass: Feed the image to the model to compute the loss.
+   B. Backward Pass: Compute gradients w.r.t. input pixels (requires_grad=True).
+      This map tells us which pixels contribute most to the classification error.
+   C. Perturbation: Add (epsilon * sign_of_gradient) to the original image.
+   D. Clamping: Clip the resulting pixel values to the valid range [0, 1] 
+      to ensure the output remains a valid image.
+=============================================================================
+"""
+
 
 # The FGSM attack is a test method to generate adversarial examples
 # Reference: https://arxiv.org/abs/1412.6572 
@@ -23,7 +65,7 @@ def run_attack_demo():
     
     # 1. Configuration
     EPSILON = 0.02  # Amount of noise (very low, almost invisible)
-    IMG_INDEX = 0   # Index of the image to attack (you can change it)
+    IMG_INDEX = 0   # Index of the image to attack 
     
     # 2. Load Data and Model
     if not os.path.exists("data_X.npy"):
