@@ -25,10 +25,8 @@ We define a safety property where the model must remain stable under global brig
 * **Safety Collapse:** The model is certified safe for small perturbations ($\delta=0.0005$), but certification drops to 0% at $\delta=0.002$.
 * **Bound Analysis:** We visualize the *worst-case* and *best-case* failure margins.
 
-<p align="center">
-  <img src="plots/plot_1_safety_rate.png" width="45%" alt="Safety Rate">
-  <img src="plots/plot_3_failure_bounds.png" width="45%" alt="Failure Bounds">
-</p>
+<img width="1189" height="690" alt="image" src="https://github.com/user-attachments/assets/d51b69f2-994a-4d84-8789-fa9d3d466e5c" />
+
 
 ### 2. Geometric Robustness (Rotation)
 Medical images are rotation-invariant in nature (a lesion is the same regardless of camera angle). We tested the model's limits by incrementally rotating images until prediction failure.
@@ -46,27 +44,6 @@ We implemented a white-box **Fast Gradient Sign Method (FGSM)** attack to demons
 <p align="center">
   <img src="plots/attack_visualization.png" width="100%" alt="Adversarial Attack Demo">
 </p>
-
----
-
-## Project Structure
-
-```text
-├── code/
-│   ├── verify_light.py         # Exp 1: LiRPA Formal Verification script
-│   ├── find_rotation_limit.py  # Exp 2: Geometric Robustness Limit Search
-│   ├── attack_fgsm.py          # Exp 3: Adversarial Attack Demo
-│   ├── model_data_defs.py      # Model architecture and data loader
-│   └── plotting_utils.py       # Comparison and visualization scripts
-├── data/
-│   ├── data_X.npy              # Preprocessed HAM10000 images
-│   └── data_Y.npy              # Labels
-├── plots/                      # Generated graphs (Heatmaps, Curves, Bounds)
-├── results/                    # Raw text logs (Margins, Angles)
-├── skin_model.pth              # Trained PyTorch Model weights
-└── README.md
-
-```
 
 ## Theory & References
 
