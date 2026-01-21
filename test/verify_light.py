@@ -1,8 +1,10 @@
+import sys
 import torch
 import numpy as np
 import os
 from auto_LiRPA import BoundedModule, BoundedTensor
 from auto_LiRPA.perturbations import PerturbationLpNorm
+sys.path.insert(0, '../code')
 from model_data_defs import load_model
 
 
@@ -62,7 +64,7 @@ def run_verification():
     print("\n=== EXPERIMENT 2: ROBUSTNESS VERIFICATION (LIGHTING) ===")
     
     # Load Data
-    if not os.path.exists("data_X.npy"):
+    if not os.path.exists("../code/data_X.npy"):
         print("[ERROR] Cannot find data_X.npy. Run the export in your notebook.")
         return
 
@@ -73,7 +75,7 @@ def run_verification():
     y_tensor = torch.tensor(y, dtype=torch.long)
     
     # Load Model
-    if not os.path.exists("skin_model.pth"):
+    if not os.path.exists("../code/skin_model.pth"):
         print("[ERROR] Cannot find skin_model.pth. Run the training first.")
         return
 

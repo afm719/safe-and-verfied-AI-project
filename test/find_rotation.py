@@ -4,6 +4,8 @@ import os
 import kornia.geometry.transform as K
 import matplotlib.pyplot as plt
 import seaborn as sns
+import sys
+sys.path.insert(0, '../code')
 from model_data_defs import load_model
 
 """
@@ -12,8 +14,7 @@ THEORY: GEOMETRIC ROBUSTNESS ANALYSIS (ROTATION INVARIANCE)
 =============================================================================
 Context: 
    Convolutional Neural Networks (CNNs) are not inherently invariant to 
-   rotation unless specifically trained for it (e.g., via data augmentation 
-   or Spatial Transformer Networks).
+   rotation unless specifically trained for it.
 
 OBJECTIVE:
    To determine the maximum angle of rotation (θ_max) that an input image 
@@ -50,9 +51,6 @@ METHODOLOGY: ITERATIVE SEARCH (GRID SEARCH)
    4. Stop when Prediction(Rotated_Image) ≠ Ground_Truth.
    5. Record the last safe angle as the "Robustness Limit".
 
-IMPLEMENTATION:
-   - Uses `kornia.geometry.transform.rotate` for differentiable affine transforms.
-   - mode='bilinear': Standard interpolation for photographic images.
 =============================================================================
 """
 
@@ -64,14 +62,14 @@ def find_robustness_limit():
         print("[ERROR] Cannot find data_X.npy")
         return
 
-    X = np.load("data_X.npy")
-    y = np.load("data_Y.npy")
+    X = np.load("../code/data_X.npy")
+    y = np.load("../code/data_Y.npy")
     
     # Convert to tensors (Float32)
     X_tensor = torch.tensor(X, dtype=torch.float32)
     y_tensor = torch.tensor(y, dtype=torch.long)
     
-    model = load_model("skin_model.pth")
+    model = load_model("../code/skin_model.pth")
     
     #  Search Configuration
     MAX_ANGLE = 45.0   # Maximum angle to test (if passed, it's considered ultra-robust)
@@ -166,9 +164,6 @@ def find_robustness_limit():
     plt.tight_layout()
     plt.savefig('../plots/robustness_curve.png')
     
-    print("-" * 60)
-    print("Plot generated: 'robustness_curve.png'")
-    print(f"Data saved in 'robustness_limits.txt'")
 
 if __name__ == "__main__":
     find_robustness_limit()
