@@ -36,37 +36,33 @@ class SkinCancerCNN(nn.Module):
         return x
 
 def load_model(weights_path):
+    print(f"--> Loading model from: {weights_path}")
     model = SkinCancerCNN()
     
     if not os.path.exists(weights_path):
-        weights_path = os.path.join(os.path.dirname(__file__), weights_path)
+        raise FileNotFoundError(f"[ERROR] Doesn't find the file {weights_path}")
 
-    try:
-        model.load_state_dict(torch.load(weights_path, map_location="cpu"))
-    except FileNotFoundError:
-        print(f"[ERROR] Doesn't find the file {weights_path}") 
+
+    model.load_state_dict(torch.load(weights_path, map_location="cpu"))
+    
+    # Remove Dropout for verification
+    model.classifier[2] = nn.Identity()
     
     model.eval()
     return model
 
 
 def load_skin_data(args=None):
-    print("--> Loading custom dataset...")
+    print("--> Loading verification data...")
     
+    data_path = data_path = os.path.join(os.path.dirname(__file__), 'verification_data.pt')
    
-    possible_paths = ['code/verification_data.pt', 'verification_data.pt']
-    data_path = None
-    for p in possible_paths:
-        if os.path.exists(p):
-            data_path = p
-            break
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"[ERROR] Doesn't find the file {data_path}")
             
-    if data_path is None:
-        raise FileNotFoundError("¡Don't find verification_data.pt!") 
-
     X_all, y_all = torch.load(data_path)
     
-    real_eps = 0.005 
+    real_eps = 0.002 
     
     if args is not None:
         if isinstance(args, dict):
@@ -76,8 +72,10 @@ def load_skin_data(args=None):
             else:
                 print("[WARNING] 'epsilon' key not found in args dictionary. Using default epsilon.")
         else:
-            # If we get a single value, use it directly
-            real_eps = args
+            try:
+                real_eps = float(args)
+            except:
+                pass
 
     print(f"--> Using Epsilon: {real_eps}")
 
@@ -85,7 +83,7 @@ def load_skin_data(args=None):
     ret_eps = torch.tensor(real_eps, dtype=torch.float32).reshape(1, -1, 1, 1)
 
     # Set data bounds (these can be adjusted as needed)
-    data_max = torch.tensor(1000.0)
-    data_min = torch.tensor(-1000.0)
+    data_max = torch.tensor(1)
+    data_min = torch.tensor(0)
     
     return X_all, y_all, data_max, data_min, ret_eps

@@ -1,0 +1,37 @@
+general:
+  device: cpu
+  results_file: test_noise/verification_noise_results.txt
+  conv_mode: matrix
+  sparse_interm: false
+
+model:
+  name: Customized("test_noise.model_data_defs", "load_model", weights_path="code/skin_model.pth")
+  path: code/skin_model.pth
+
+data:
+  dataset: Customized("test_noise.model_data_defs", "load_skin_data")
+  # pkl_path: code/verification_data_eps.pkl
+  start: 0
+  end: 20
+  num_outputs: 7
+  mean: [0.0, 0.0, 0.0]
+  std: [1.0, 1.0, 1.0 ]
+
+specification:
+  robustness_type: verified-acc
+  epsilon: 0.002
+
+solver:
+  batch_size: 1
+  #crown:
+    #max_crown_size: 10000000
+  beta-crown: 
+    iteration: 20
+    enable_opt_interm_bounds: false
+
+bab:
+  timeout: 180
+  max_domains: 500000
+
+attack:
+  pgd_order: skip

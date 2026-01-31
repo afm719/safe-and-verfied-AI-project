@@ -4,7 +4,7 @@ import numpy as np
 import os
 from auto_LiRPA import BoundedModule, BoundedTensor
 from auto_LiRPA.perturbations import PerturbationLpNorm
-sys.path.insert(0, '../code')
+sys.path.insert(0, '../test_noise')
 from model_data_defs import load_model
 
 

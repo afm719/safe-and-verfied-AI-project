@@ -1,15 +1,15 @@
 general:
   device: cpu
-  results_file: code/verification_noise_results.txt
+  results_file: test_noise_avgpool/verification_noise_results.txt
   conv_mode: matrix
   sparse_interm: false
 
 model:
-  name: Customized("model_data_defs", "load_model", weights_path="code/skin_model.pth")
-  path: code/skin_model.pth
+  name: Customized("test_noise_avgpool.model_data_defs_avgpool", "load_model", weights_path="code/skin_model_avg.pth")
+  path: code/skin_model_avg.pth
 
 data:
-  dataset: Customized("model_data_defs", "load_skin_data")
+  dataset: Customized("test_noise_avgpool.model_data_defs_avgpool", "load_skin_data")
   # pkl_path: code/verification_data_eps.pkl
   start: 0
   end: 20
@@ -23,6 +23,8 @@ specification:
 
 solver:
   batch_size: 1
+  #crown:
+    #max_crown_size: 10000000
   beta-crown: 
     iteration: 20
     enable_opt_interm_bounds: false
