@@ -4,8 +4,6 @@ import os
 import kornia.geometry.transform as K
 import matplotlib.pyplot as plt
 import seaborn as sns
-import sys
-sys.path.insert(0, '../code')
 from model_data_defs import load_model
 
 """
@@ -35,8 +33,6 @@ MATHEMATICAL FORMULATION:
    Bilinear Interpolation Formula:
        I(x', y') ≈ w1*I11 + w2*I12 + w3*I21 + w4*I22
    
-   * Note: The interpolation process itself introduces "noise" (aliasing/blur) 
-     which can act as an adversarial perturbation, confusing the CNN.
 
 METHODOLOGY: ITERATIVE SEARCH (GRID SEARCH)
    Unlike the LiRPA experiment (which proves bounds), geometric verification 
@@ -58,7 +54,7 @@ def find_robustness_limit():
     print("\n=== EXPERIMENT 3 (ADVANCED): ROTATION LIMIT SEARCH ===")
     
     # Load Data and Model
-    if not os.path.exists("data_X.npy"):
+    if not os.path.exists("../code/data_X.npy"):
         print("[ERROR] Cannot find data_X.npy")
         return
 
@@ -130,7 +126,7 @@ def find_robustness_limit():
             
         max_safe_angles.append(current_limit)
 
-    np.savetxt("../results/robustness_limits.txt", max_safe_angles, fmt='%.1f', header="MaxSafeAngle")
+    np.savetxt("../results_rotation_and_autoLirpa/robustness_limits.txt", max_safe_angles, fmt='%.1f', header="MaxSafeAngle")
     
     # Generate "Robustness Curve" (Survival Plot)
     # This shows what % of images survive X degrees of rotation

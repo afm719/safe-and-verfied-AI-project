@@ -2,6 +2,7 @@ import sys
 import torch
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 from auto_LiRPA import BoundedModule, BoundedTensor
 from auto_LiRPA.perturbations import PerturbationLpNorm
 sys.path.insert(0, '../test_noise')
@@ -19,17 +20,17 @@ References:
    - Auto_LiRPA Library: https://github.com/Verified-Intelligence/auto_LiRPA
 
 OBJECTIVE:
-   To mathematically CERTIFY that the neural network is invariant to global 
-   illumination changes. Unlike standard testing (which tries random points), 
+   To mathematically CERTIFY that the neural network is invariant to the noise.
+   Unlike standard testing (which tries random points), 
    this method guarantees that *no* perturbation within a range exists that 
    can flip the prediction.
 
 MATHEMATICAL FORMULATION (Robustness Property):
-   We define a global brightness perturbation δ (delta).
+   We define a global a perturbation ε (epsilon).
    For a given input image x and ground truth label y, we define a verification 
    region (Hyper-rectangle):
        
-       x' ∈ [x - δ, x + δ]
+       x' ∈ [x - ε, x + ε]
    
    The goal is to prove that for ALL x' in this infinite set:
        
@@ -69,8 +70,8 @@ def run_verification():
         return
 
     # Load and ensure correct types (Float32 for images, Long for labels)
-    X = np.load("data_X.npy")
-    y = np.load("data_Y.npy")
+    X = np.load("../code/data_X.npy")
+    y = np.load("../code/data_Y.npy")
     X_tensor = torch.tensor(X, dtype=torch.float32)
     y_tensor = torch.tensor(y, dtype=torch.long)
     
@@ -79,7 +80,7 @@ def run_verification():
         print("[ERROR] Cannot find skin_model.pth. Run the training first.")
         return
 
-    model = load_model("skin_model.pth")
+    model = load_model("../code/skin_model.pth")
     model.eval()  
 
     # Replace Dropout with Identity to avoid errors in auto_LiRPA
@@ -97,30 +98,28 @@ def run_verification():
     dummy_input = torch.zeros_like(X_tensor[0:1])
     bounded_model = BoundedModule(model, dummy_input, bound_opts={'relu': 'same-slope'})
     
-    # Experiment Configuration
-    # Test multiple delta values to decide best one
-    DELTAS = [0.0005, 0.001, 0.002, 0.005]  # adjust list as needed
+    EPSILONS = [0.0005, 0.001, 0.002, 0.005]  
 
     total = len(X)
-    results_dir = os.path.join("..", "results")
+    results_dir = os.path.join("..", "results_rotation_and_autoLirpa")
     os.makedirs(results_dir, exist_ok=True)
 
-    summary_path = os.path.join(results_dir, "delta_results.csv")
+    summary_path = os.path.join(results_dir, "epsilon_results.csv")
     with open(summary_path, "w") as f_summary:
-        f_summary.write("Delta,Safe_Count,Total,Safety_Rate\n")
+        f_summary.write("Epsilon,Safe_Count,Total,Safety_Rate\n")
 
-        best_delta = None
+        best_epsilon = None
         best_rate = -1.0
 
-        for DELTA in DELTAS:
-            print(f"\nProperty: Invariance to light changes (Delta = {DELTA})")
+        for EPSILON in EPSILONS:
+            print(f"\nProperty: Invariance to light changes (Epsilon = {EPSILON})")
             safe_count = 0
 
-            print(f"\nVerifying {total} images for delta {DELTA}...")
+            print(f"\nVerifying {total} images for epsilon {EPSILON}...")
             print("-" * 50)
 
-            # Open file to save failure margins for this delta
-            fname = os.path.join(results_dir, f"failure_margins_delta_{DELTA:.6f}.txt")
+            # Open file to save failure margins for this epsilon
+            fname = os.path.join(results_dir, f"failure_margins_epsilon_{EPSILON:.6f}.txt")
             with open(fname, "w") as f_margins:
                 f_margins.write("Image_Index,Class,Failure_Margin\n")
 
@@ -129,8 +128,8 @@ def run_verification():
                     label = y_tensor[i].item()
 
                     # Define perturbation limits (Variable global brightness)
-                    x_L = torch.clamp(image - DELTA, min=0.0)
-                    x_U = torch.clamp(image + DELTA, max=1.0)
+                    x_L = torch.clamp(image - EPSILON, min=0.0)
+                    x_U = torch.clamp(image + EPSILON, max=1.0)
 
                     # Wrap in perturbed tensor
                     ptb = PerturbationLpNorm(norm=np.inf, x_L=x_L, x_U=x_U)
@@ -159,21 +158,74 @@ def run_verification():
             # Calculate safety rate
 
             safety_rate = safe_count / total
-            f_summary.write(f"{DELTA},{safe_count},{total},{safety_rate:.6f}\n")
+            f_summary.write(f"{EPSILON},{safe_count},{total},{safety_rate:.6f}\n")
             print("-" * 50)
-            print(f"Delta {DELTA}: {safe_count}/{total} images certified. Safety Rate: {safety_rate*100:.2f}%")
+            print(f"Epsilon {EPSILON}: {safe_count}/{total} images certified. Safety Rate: {safety_rate*100:.2f}%")
 
-            # Choose best: highest safety rate, tie-breaker smaller delta
-            if (safety_rate > best_rate) or (abs(safety_rate - best_rate) < 1e-12 and (best_delta is None or DELTA < best_delta)):
+            # Choose best: highest safety rate, tie-breaker smaller epsilon
+            if (safety_rate > best_rate) or (abs(safety_rate - best_rate) < 1e-12 and (best_epsilon is None or EPSILON < best_epsilon)):
                 best_rate = safety_rate
-                best_delta = DELTA
+                best_epsilon = EPSILON
 
     print("\n=== SUMMARY ===")
-    if best_delta is not None:
-        print(f"Best Delta: {best_delta} with Safety Rate: {best_rate*100:.2f}%")
+    if best_epsilon is not None:
+        print(f"Best Epsilon: {best_epsilon} with Safety Rate: {best_rate*100:.2f}%")
         print(f"Full summary saved to: {summary_path}")
     else:
-        print("No delta evaluated.")
+        print("No epsilon evaluated.")
+
+    target_idx = 0
+    target_image = X_tensor[target_idx:target_idx+1]
+    target_label = y_tensor[target_idx].item()
+    
+    print(f"Analyzing Image {target_idx} (True Class: {target_label}) for crossing point...")
+    
+    plot_epsilons = np.linspace(0.0, 0.001, 50)    
+    lb_true_class = []
+    ub_other_class = []
+    
+    for d in plot_epsilons:
+        x_L = torch.clamp(target_image - d, min=0.0)
+        x_U = torch.clamp(target_image + d, max=1.0)
+        
+        ptb = PerturbationLpNorm(norm=np.inf, x_L=x_L, x_U=x_U)
+        bounded_img = BoundedTensor(target_image, ptb)
+        
+        lb, ub = bounded_model.compute_bounds(x=(bounded_img,), method="CROWN")
+        
+        val_true = lb[0, target_label].item()
+        
+        mask = torch.ones_like(ub[0], dtype=torch.bool)
+        mask[target_label] = False
+        val_other = torch.max(ub[0][mask]).item()
+        
+        lb_true_class.append(val_true)
+        ub_other_class.append(val_other)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(plot_epsilons, lb_true_class, 'b-', linewidth=2, label='Lower Bound (True Class)')
+    plt.plot(plot_epsilons, ub_other_class, 'r--', linewidth=2, label='Upper Bound (Max Error)')
+    
+    lb_arr = np.array(lb_true_class)
+    ub_arr = np.array(ub_other_class)
+    
+    plt.fill_between(plot_epsilons, lb_arr, ub_arr, where=(lb_arr > ub_arr),
+                     color='green', alpha=0.15, label='Certified Safe')
+    plt.fill_between(plot_epsilons, lb_arr, ub_arr, where=(lb_arr <= ub_arr),
+                     color='red', alpha=0.15, label='Unsafe Region')
+    
+    plt.xlabel('Epsilon perturbation ($\epsilon$)')
+    plt.ylabel('Logits Output')
+    plt.title(f'Verification Bounds Analysis - Image {target_idx}')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    plot_path = os.path.join(results_dir, "bounds_plot.png")
+    plt.savefig(plot_path)
+    print(f"Plot saved to: {plot_path}")
+
+
+    
 
 if __name__ == "__main__":
     run_verification()
