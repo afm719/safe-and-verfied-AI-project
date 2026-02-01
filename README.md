@@ -1,56 +1,66 @@
 # Formal Verification & Robustness Analysis of Skin Cancer CNNs
 
+This repository implements a **Formal Verification** framework to audit the robustness of a Convolutional Neural Network (CNN) trained for skin cancer detection (HAM10000).
 
-##  Abstract
-This project focuses on the **Safe and Verified AI** domain, specifically applied to **Medical Imaging** (Dermatoscopy). We analyze the robustness of a Convolutional Neural Network (CNN) trained on the **HAM10000** dataset to detect skin lesions.
+We utilize the **AutoLiRPA** framework (CROWN and $\alpha,\beta$-CROWN)
 
-Unlike standard accuracy metrics, we employ **Formal Methods (Bound Propagation)** and **Geometric Stress Testing** to certify the model's behavior against:
-1.  **Global Illumination Changes:** Using Linear Relaxation based perturbation analysis (CROWN).
-2.  **Geometric Transformations:** Assessing invariance to rotation.
-3.  **Adversarial Attacks:** Evaluating vulnerability to FGSM (Fast Gradient Sign Method).
-
-##  Key Features
-* **Formal Verification:** Uses `auto_LiRPA` (CROWN algorithm) to mathematically certify safety regions around input images.
-* **Geometric Robustness:** Empirical verification of rotation invariance using `Kornia` differentiable transforms.
-* **Adversarial Defense:** Demonstration of model fragility via white-box attacks.
-* **Advanced Visualization:** Generation of Survival Curves, Failure Heatmaps, and Risk Profiles (ECDF).
-
----
-
-##  Experimental Results
-
-### 1. Formal Verification (Lighting Invariance)
-We define a safety property where the model must remain stable under global brightness perturbations ($\delta$). We use **CROWN (Linear Relaxation)** to compute the upper and lower bounds of the output logits.
-
-* **Safety Collapse:** The model is certified safe for small perturbations ($\delta=0.0005$), but certification drops to 0% at $\delta=0.002$.
-* **Bound Analysis:** We visualize the *worst-case* and *best-case* failure margins.
-
-<img width="1189" height="690" alt="image" src="https://github.com/user-attachments/assets/d51b69f2-994a-4d84-8789-fa9d3d466e5c" />
+1. Formal Verification (auto_LiRPA & CROWN):
+   The project utilizes Linear Relaxation-based Perturbation Analysis (LiRPA) to compute guaranteed output bounds. This allows us to prove that a model's prediction remains constant within a specific $\epsilon$-ball of noise.
+2. Rotational Robustness:
+   Unlike standard pixel-wise perturbations, rotation involves spatial interpolation. The scripts in test_rotation analyze the safety limits of the model when facing geometric shifts, which is crucial for real-world computer vision reliability.
 
 
-### 2. Geometric Robustness (Rotation)
-Medical images are rotation-invariant in nature (a lesion is the same regardless of camera angle). We tested the model's limits by incrementally rotating images until prediction failure.
+## Structure
+```
+SAFE-AND-VERIFIED-AI-PROJECT/
+├── alpha-beta-CROWN/           # Official verifier for complete/incomplete verification.
+├── code/                       # Core assets and base models.
+│   ├── CNN_modelFV.ipynb       # Model definition, training, and evaluation notebook.
+│   ├── data_X.npy / data_Y.npy # Pre-processed dataset files in NumPy format.
+│   ├── find_limit_rotation.py  # Script to calculate critical rotation thresholds.
+│   ├── skin_model.pth          # Trained PyTorch model weights.
+│   └── requirements.txt        # Python dependencies.
+├── dataset/                    # input data.
+├── plots/                      # Exported visualizations and performance graphs.
+├── test_autoLirpa_noise/       # Robustness bounds using the auto_LiRPA library.
+│   └── noise_autoLirpa.py      # Script for linear relaxation-based perturbation analysis.
+├── test_noise/                 # Noise-specific robustness pipelines.
+│   ├── config_noise.yaml       # Configuration file for noise parameters.
+│   ├── robustness_curve.py     # Generates accuracy vs. perturbation magnitude plots.
+│   └── verification_data.pt    # PyTorch tensors containing verification results.
+├── test_noise_avgpool/         # Specialized tests for models with Average Pooling layers.
+└── test_rotation/              # Geometric transformation analysis.
+    └── find_rotation.py        # Analysis of model stability under rotational variance.
+```
 
-* **Survival Curve:** Shows the percentage of images that maintain correct classification as rotation angle increases.
-* **Findings:** The model is robust up to $\pm 5^\circ$, but performance degrades significantly beyond $\pm 15^\circ$.
+Setup and Installation
+Clone the repository:
 
-<p align="center">
-  <img src="plots/robustness_curve.png" width="80%" alt="Geometric Survival Curve">
-</p>
+```bash
+git clone https://github.com/afm719/SAFE-AND-VERIFIED-AI-PROJECT.git
+cd SAFE-AND-VERIFIED-AI-PROJECT
+```
+Install Dependencies:
 
-### 3. Adversarial Attacks (FGSM)
-We implemented a white-box **Fast Gradient Sign Method (FGSM)** attack to demonstrate that imperceptible noise ($\epsilon=0.02$) can flip the diagnosis.
+```bash
+pip install -r code/requirements.txt
+```
+Running a Verification Test:
 
-<p align="center">
-  <img src="plots/attack_visualization.png" width="100%" alt="Adversarial Attack Demo">
-</p>
+```bash
+python test_noise/robustness_curve.py
+```
 
-## Theory & References
+Autolirpa 
 
-* **LiRPA / CROWN:** Xu et al., *"Fast and Complete: Enabling High-Performance Neural Network Verification with Efficient CROWN"* (NeurIPS 2020).
-* **FGSM:** Goodfellow et al., *"Explaining and Harnessing Adversarial Examples"* (ICLR 2015).
-* **HAM10000 Dataset:** Tschandl et al., *"The HAM10000 dataset, a large collection of multi-source dermatoscopic images of common pigmented skin lesions"*.
+```bash
+cd test_autoLirpa_noise
+python noise_autoLirpa.py
+```
 
----
+Rotation
 
-
+```bash
+cd test_rotation
+python find_rotation.py
+```
