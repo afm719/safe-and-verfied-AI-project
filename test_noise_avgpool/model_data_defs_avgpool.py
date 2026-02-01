@@ -82,7 +82,7 @@ def load_skin_data(args=None):
     # Reshape epsilon for convolutional layers
     ret_eps = torch.tensor(real_eps, dtype=torch.float32).reshape(1, -1, 1, 1)
 
-    # Set data bounds (these can be adjusted as needed)
+    # Set data bounds 
     data_max = torch.tensor(1)
     data_min = torch.tensor(0)
     
