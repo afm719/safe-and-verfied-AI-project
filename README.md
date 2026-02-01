@@ -2,12 +2,16 @@
 
 This repository implements a **Formal Verification** framework to audit the robustness of a Convolutional Neural Network (CNN) trained for skin cancer detection (HAM10000).
 
-We utilize the **AutoLiRPA** framework (CROWN and $\alpha,\beta$-CROWN)
+We use the **AutoLiRPA** framework (CROWN and $\alpha,\beta$-CROWN) to achieve three main objectives:
 
-1. Formal Verification (auto_LiRPA & CROWN):
-   The project utilizes Linear Relaxation-based Perturbation Analysis (LiRPA) to compute guaranteed output bounds. This allows us to prove that a model's prediction remains constant within a specific $\epsilon$-ball of noise.
-2. Rotational Robustness:
-   Unlike standard pixel-wise perturbations, rotation involves spatial interpolation. The scripts in test_rotation analyze the safety limits of the model when facing geometric shifts, which is crucial for real-world computer vision reliability.
+1. **Baseline Verification (auto_LiRPA & CROWN):**
+   The project utilizes Linear Relaxation-based Perturbation Analysis (LiRPA) to compute guaranteed output bounds efficiently. This serves as a rapid screening method to prove that a model's prediction remains constant within a specific $\epsilon$-ball of noise.
+
+2. **High-Precision Complete Verification ($\alpha,\beta$-CROWN):**
+   To address the precision limitations of linear relaxation (especially in non-linear architectures with MaxPooling), we employ **$\alpha,\beta$-CROWN**. This method integrates **Branch-and-Bound (BaB)** to iteratively refine the verification bounds, maximizing the certification rate where the baseline method yields incomplete results.
+
+3. **Rotational Robustness:**
+   Unlike standard pixel-wise perturbations, rotation involves spatial interpolation. The scripts in `test_rotation` analyze the safety limits of the model when facing geometric shifts, which is crucial for real-world computer vision reliability.
 
 
 ## Structure
