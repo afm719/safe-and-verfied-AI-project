@@ -64,3 +64,20 @@ Rotation
 cd test_rotation
 python find_rotation.py
 ```
+To run the complete verification process using Branch-and-Bound, you must execute the script from the root directory of the repository.
+
+First, set the PYTHONPATH to the current directory to ensure all modules are loaded correctly:
+
+PowerShell:
+```bash
+$env:PYTHONPATH = "$PWD"
+```
+Linux / Mac:
+```bash
+export PYTHONPATH=$PWD
+```
+
+Then, run the verifier pointing to the noise configuration file. You can specify the range of images to verify (e.g., from index 0 to 20) using --start and --end:
+```bash
+python alpha-beta-CROWN/complete_verifier/abcrown.py --config test_noise/config_noise.yaml --start 0 --end 20
+```
